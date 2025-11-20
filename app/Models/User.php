@@ -9,8 +9,10 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\Table;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
+
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -23,6 +25,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'role',
         'password',
     ];
 
@@ -49,7 +52,16 @@ class User extends Authenticatable
         ];
     }
 
-    
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
     public function users() { return $this->hasMany(User::class); }
     public function products() { return $this->hasMany(Product::class); }
     public function transactions() { return $this->hasMany(Transaction::class); }
