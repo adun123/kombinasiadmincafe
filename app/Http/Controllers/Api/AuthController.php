@@ -13,8 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    //
-     // REGISTER
+    // REGISTER
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -38,6 +37,7 @@ class AuthController extends Controller
         $token = JWTAuth::fromUser($user);
 
         return response()->json([
+            'status'  => 'success',
             'message' => 'Register berhasil',
             'user'    => $user,
             'token'   => $token
@@ -48,15 +48,30 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
+        $token = null; // Inisialisasi token
 
-        if (!$token = Auth::attempt($credentials)) {
-            return response()->json(['error' => 'Email atau password salah'], 401);
+        try {
+            // Menggunakan JWTAuth::attempt() untuk otentikasi eksplisit dengan JWT
+            if (! $token = JWTAuth::attempt($credentials)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Email atau password salah',
+                ], 401);
+            }
+        } catch (JWTException $e) {
+            // Menangani jika token tidak dapat dibuat
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal membuat token: ' . $e->getMessage(),
+            ], 500);
         }
 
+        // Jika berhasil, kembalikan token
         return response()->json([
+            'status' => 'success',
             'message' => 'Login berhasil',
-            'token'   => $token,
             'user'    => Auth::user(),
+            'token'   => $token,
         ]);
     }
 
